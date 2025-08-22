@@ -9,6 +9,9 @@ import DriverRegistry from "./pages/DriverRegistry";
 import NotFound from "./pages/NotFound";
 import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/hooks/use-auth";
+import { AdminProvider } from "@/hooks/use-admin";
+import { Header } from "@/components/Header";
+import { ProtectedAdminRoute } from "@/components/ProtectedAdminRoute";
 
 const queryClient = new QueryClient();
 
@@ -17,20 +20,37 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/registry" element={<DriverRegistry />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-        <AuthModal open={!user && !loading} />
-      </TooltipProvider>
+      <AdminProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Header />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedAdminRoute>
+                    <AdminDashboard />
+                  </ProtectedAdminRoute>
+                }
+              />
+              <Route
+                path="/registry"
+                element={
+                  <ProtectedAdminRoute>
+                    <DriverRegistry />
+                  </ProtectedAdminRoute>
+                }
+              />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+          <AuthModal open={!user && !loading} />
+        </TooltipProvider>
+      </AdminProvider>
     </QueryClientProvider>
   );
 };
