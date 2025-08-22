@@ -50,21 +50,16 @@ export function ReportForm({ onReportSubmitted }: ReportFormProps) {
     setIsSubmitting(true);
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      const { error } = await supabase
-        .from("reports")
-        .insert({
+      const { error } = await supabase.functions.invoke("submit-report", {
+        body: {
           vehicle_number: formData.vehicleNumber,
           incident_type: formData.incidentType,
           description: formData.description,
           location: formData.location || null,
           reporter_name: formData.reporterName || null,
           reporter_contact: formData.reporterContact || null,
-          user_id: user?.id || null,
-        });
+        },
+      });
 
       if (error) throw error;
 
@@ -88,7 +83,10 @@ export function ReportForm({ onReportSubmitted }: ReportFormProps) {
       console.error("Error submitting report:", error);
       toast({
         title: "Submission Failed",
-        description: "Unable to submit report. Please try again.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Unable to submit report. Please try again.",
         variant: "destructive",
       });
     } finally {
