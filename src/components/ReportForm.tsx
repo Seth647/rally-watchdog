@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertTriangle, Camera, MapPin, Phone } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { AlertTriangle, Camera, MapPin, Phone, Lock } from "lucide-react";
 
 const INCIDENT_TYPES = [
   "Speeding",
@@ -34,9 +35,19 @@ export function ReportForm({ onReportSubmitted }: ReportFormProps) {
     reporterContact: ""
   });
   const { toast } = useToast();
+  const { user, loading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to submit a report.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (!formData.vehicleNumber || !formData.incidentType || !formData.description) {
       toast({
@@ -50,10 +61,6 @@ export function ReportForm({ onReportSubmitted }: ReportFormProps) {
     setIsSubmitting(true);
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
       const { error } = await supabase
         .from("reports")
         .insert({
@@ -63,8 +70,7 @@ export function ReportForm({ onReportSubmitted }: ReportFormProps) {
           location: formData.location || null,
           reporter_name: formData.reporterName || null,
           reporter_contact: formData.reporterContact || null,
-          user_id: user?.id || null,
-        });
+        } as any);
 
       if (error) throw error;
 
@@ -95,6 +101,39 @@ export function ReportForm({ onReportSubmitted }: ReportFormProps) {
       setIsSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+        <Card className="max-w-md w-full border-border bg-card shadow-[var(--shadow-card)]">
+          <CardHeader className="text-center">
+            <div className="flex items-center justify-center mb-4">
+              <div className="bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary-glow))] p-3 rounded-full">
+                <Lock className="w-6 h-6 text-primary-foreground" />
+              </div>
+            </div>
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary-glow))] bg-clip-text text-transparent">
+              Authentication Required
+            </CardTitle>
+            <CardDescription>
+              Please sign in to submit an incident report
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background p-4">

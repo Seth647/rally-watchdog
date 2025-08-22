@@ -20,6 +20,13 @@ interface Report {
   created_at: string;
   driver_id?: string;
   phone_number?: string;
+  reporter_name?: string;
+  reporter_email?: string;
+  incident_time?: string;
+  media_url?: string;
+  reporter_contact?: string;
+  updated_at?: string;
+  user_id?: string;
 }
 
 export function AdminDashboard() {
@@ -54,7 +61,22 @@ export function AdminDashboard() {
       if (error) throw error;
 
       const reportsWithDrivers = data.map(report => ({
-        ...report,
+        id: report.id,
+        report_number: report.report_number || '',
+        vehicle_number: report.vehicle_number,
+        incident_type: report.incident_type,
+        description: report.description,
+        location: report.location,
+        status: report.status,
+        created_at: report.created_at,
+        driver_id: report.driver_id,
+        reporter_name: report.reporter_name,
+        reporter_email: (report as any).reporter_email,
+        incident_time: report.incident_time,
+        media_url: report.media_url,
+        reporter_contact: report.reporter_contact,
+        updated_at: report.updated_at,
+        user_id: (report as any).user_id,
         driver_name: report.drivers?.driver_name,
         phone_number: report.drivers?.phone_number
       }));
@@ -231,6 +253,13 @@ export function AdminDashboard() {
                               {report.location && ` • ${report.location}`}
                             </p>
                             <p className="text-sm">{report.description}</p>
+                            {(report.reporter_name || report.reporter_email) && (
+                              <div className="text-xs text-muted-foreground border-l-2 border-border pl-3 bg-muted/30 p-2 rounded">
+                                <p className="font-medium">Reported by:</p>
+                                {report.reporter_name && <p>{report.reporter_name}</p>}
+                                {report.reporter_email && <p>{report.reporter_email}</p>}
+                              </div>
+                            )}
                             <p className="text-xs text-muted-foreground">
                               Reported: {new Date(report.created_at).toLocaleString()}
                             </p>
