@@ -14,6 +14,8 @@ export function AuthModal({ open }: AuthModalProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rallyNumber, setRallyNumber] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -30,10 +32,25 @@ export function AuthModal({ open }: AuthModalProps) {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signUp({ email, password });
+    const phoneRegex = /^\+27\d{9}$/;
+    if (!phoneRegex.test(phone)) {
+      toast({ title: "Invalid phone", description: "Use South African format +27XXXXXXXXX", variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+    const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) {
       toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
     } else {
+      const user = data.user;
+      if (user) {
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .insert({ id: user.id, rally_number: rallyNumber, phone });
+        if (profileError) {
+          toast({ title: "Profile setup failed", description: profileError.message, variant: "destructive" });
+        }
+      }
       toast({ title: "Check your email", description: "Confirm your account via the email sent." });
     }
     setLoading(false);
@@ -57,6 +74,24 @@ export function AuthModal({ open }: AuthModalProps) {
             <Label htmlFor="password">Password</Label>
             <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
+          {isSignUp && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="rallyNumber">Rally Number</Label>
+                <Input id="rallyNumber" value={rallyNumber} onChange={(e) => setRallyNumber(e.target.value)} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone (+27)</Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+27XXXXXXXXX"
+                  required
+                />
+              </div>
+            </>
+          )}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Loading..." : isSignUp ? "Sign Up" : "Sign In"}
           </Button>
