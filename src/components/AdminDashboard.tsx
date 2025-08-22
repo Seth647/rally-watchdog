@@ -32,6 +32,21 @@ export function AdminDashboard() {
 
   useEffect(() => {
     fetchReports();
+
+    const channel = supabase
+      .channel("reports-changes")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "reports" },
+        () => {
+          fetchReports();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
