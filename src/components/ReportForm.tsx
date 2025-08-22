@@ -50,6 +50,10 @@ export function ReportForm({ onReportSubmitted }: ReportFormProps) {
     setIsSubmitting(true);
 
     try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       const { error } = await supabase
         .from("reports")
         .insert({
@@ -59,7 +63,8 @@ export function ReportForm({ onReportSubmitted }: ReportFormProps) {
           location: formData.location || null,
           reporter_name: formData.reporterName || null,
           reporter_contact: formData.reporterContact || null,
-        } as any);
+          user_id: user?.id || null,
+        });
 
       if (error) throw error;
 

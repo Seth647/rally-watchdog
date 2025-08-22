@@ -50,6 +50,24 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          username: string | null
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          username?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
           created_at: string
@@ -60,12 +78,13 @@ export type Database = {
           incident_type: string
           location: string | null
           media_url: string | null
-          report_number: string
+          report_number?: string
           reporter_contact: string | null
           reporter_name: string | null
           status: string
           updated_at: string
           vehicle_number: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -82,6 +101,7 @@ export type Database = {
           status?: string
           updated_at?: string
           vehicle_number: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -98,6 +118,7 @@ export type Database = {
           status?: string
           updated_at?: string
           vehicle_number?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -105,6 +126,13 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]

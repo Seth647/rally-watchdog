@@ -131,13 +131,14 @@ export function DriverRegistry() {
         emergency_contact: ""
       });
       fetchDrivers();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error saving driver:", error);
       toast({
         title: "Error",
-        description: error.message?.includes("duplicate") 
-          ? "Vehicle number already exists" 
-          : "Failed to save driver information",
+        description:
+          error instanceof Error && error.message.includes("duplicate")
+            ? "Vehicle number already exists"
+            : "Failed to save driver information",
         variant: "destructive",
       });
     }
