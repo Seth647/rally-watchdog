@@ -14,13 +14,155 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      drivers: {
+        Row: {
+          created_at: string
+          driver_name: string
+          emergency_contact: string | null
+          id: string
+          phone_number: string
+          updated_at: string
+          vehicle_make: string | null
+          vehicle_model: string | null
+          vehicle_number: string
+        }
+        Insert: {
+          created_at?: string
+          driver_name: string
+          emergency_contact?: string | null
+          id?: string
+          phone_number: string
+          updated_at?: string
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_number: string
+        }
+        Update: {
+          created_at?: string
+          driver_name?: string
+          emergency_contact?: string | null
+          id?: string
+          phone_number?: string
+          updated_at?: string
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_number?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string
+          description: string
+          driver_id: string | null
+          id: string
+          incident_time: string | null
+          incident_type: string
+          location: string | null
+          media_url: string | null
+          report_number: string
+          reporter_contact: string | null
+          reporter_name: string | null
+          status: string
+          updated_at: string
+          vehicle_number: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          driver_id?: string | null
+          id?: string
+          incident_time?: string | null
+          incident_type: string
+          location?: string | null
+          media_url?: string | null
+          report_number: string
+          reporter_contact?: string | null
+          reporter_name?: string | null
+          status?: string
+          updated_at?: string
+          vehicle_number: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          driver_id?: string | null
+          id?: string
+          incident_time?: string | null
+          incident_type?: string
+          location?: string | null
+          media_url?: string | null
+          report_number?: string
+          reporter_contact?: string | null
+          reporter_name?: string | null
+          status?: string
+          updated_at?: string
+          vehicle_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      warnings: {
+        Row: {
+          delivery_status: string | null
+          driver_id: string
+          id: string
+          message: string
+          report_id: string
+          sent_at: string
+          warning_type: string
+        }
+        Insert: {
+          delivery_status?: string | null
+          driver_id: string
+          id?: string
+          message: string
+          report_id: string
+          sent_at?: string
+          warning_type: string
+        }
+        Update: {
+          delivery_status?: string | null
+          driver_id?: string
+          id?: string
+          message?: string
+          report_id?: string
+          sent_at?: string
+          warning_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warnings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "warnings_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_report_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
