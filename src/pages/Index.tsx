@@ -2,11 +2,28 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ReportForm } from "@/components/ReportForm";
-import { Link } from "react-router-dom";
 import { AlertTriangle, Shield, Users, FileText, ArrowRight } from "lucide-react";
+import { useAdmin } from "@/hooks/use-admin";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const [showReportForm, setShowReportForm] = useState(false);
+  const { isAdmin } = useAdmin();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const handleProtectedNav = (path: string) => {
+    if (!isAdmin) {
+      toast({
+        title: "Access denied",
+        description: "You are not an administrator",
+        variant: "destructive",
+      });
+      return;
+    }
+    navigate(path);
+  };
 
   if (showReportForm) {
     return <ReportForm onReportSubmitted={() => setShowReportForm(false)} />;
@@ -83,16 +100,14 @@ const Index = () => {
                 <p className="text-muted-foreground mb-6">
                   Monitor incidents, manage reports, and send warnings to drivers in real-time.
                 </p>
-                <Button 
-                  asChild 
-                  variant="rally" 
-                  size="lg" 
+                <Button
+                  variant="rally"
+                  size="lg"
                   className="w-full group"
+                  onClick={() => handleProtectedNav("/admin")}
                 >
-                  <Link to="/admin">
-                    Access Dashboard
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Link>
+                  Access Dashboard
+                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </CardContent>
             </Card>
@@ -125,13 +140,13 @@ const Index = () => {
                 <p className="text-muted-foreground text-center">
                   Comprehensive database of all rally participants and their vehicle information.
                 </p>
-                <Button 
-                  asChild 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="w-full mt-4"
+                  onClick={() => handleProtectedNav("/registry")}
                 >
-                  <Link to="/registry">View Registry</Link>
+                  View Registry
                 </Button>
               </CardContent>
             </Card>
