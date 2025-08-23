@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import notificationapi from 'npm:notificationapi-node-server-sdk';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -65,32 +66,43 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Sending SMS to:', driver.phone_number, 'Message:', message);
 
-    // Send SMS via NotificationAPI
-    const notificationApiKey = Deno.env.get('NOTIFICATIONAPI_API_KEY');
-    if (!notificationApiKey) {
-      console.error('NotificationAPI API key not found');
+    // Initialize NotificationAPI with client credentials
+    const notificationApiClientId = Deno.env.get('NOTIFICATIONAPI_CLIENT_ID');
+    const notificationApiClientSecret = Deno.env.get('NOTIFICATIONAPI_CLIENT_SECRET');
+    
+    if (!notificationApiClientId || !notificationApiClientSecret) {
+      console.error('NotificationAPI credentials not found');
       return new Response(
         JSON.stringify({ error: 'SMS service not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const smsResponse = await fetch('https://api.notificationapi.com/sms/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': notificationApiKey,
-      },
-      body: JSON.stringify({
-        phoneNumber: driver.phone_number,
-        message: message,
-      }),
-    });
+    // Initialize NotificationAPI
+    notificationapi.init(notificationApiClientId, notificationApiClientSecret);
 
-    const smsResult = await smsResponse.json();
-    const deliveryStatus = smsResponse.ok ? 'sent' : 'failed';
-    
-    console.log('SMS API response:', smsResponse.status, smsResult);
+    console.log('Sending SMS to:', driver.phone_number, 'Message:', message);
+
+    let deliveryStatus = 'failed';
+    let smsResult: any = null;
+
+    try {
+      // Send SMS via NotificationAPI SDK
+      await notificationapi.send({
+        type: 'rally_watchdog_warning',
+        to: {
+          id: driver.phone_number, // Use phone number as ID
+          number: driver.phone_number
+        }
+      });
+      
+      deliveryStatus = 'sent';
+      smsResult = { success: true };
+      console.log('SMS sent successfully via NotificationAPI SDK');
+    } catch (smsError: any) {
+      console.error('SMS sending failed:', smsError);
+      smsResult = { error: smsError.message };
+    }
 
     // Record warning in database
     const { error: warningError } = await supabase
@@ -107,7 +119,7 @@ const handler = async (req: Request): Promise<Response> => {
       console.error('Error recording warning:', warningError);
     }
 
-    if (!smsResponse.ok) {
+    if (deliveryStatus === 'failed') {
       console.error('SMS sending failed:', smsResult);
       return new Response(
         JSON.stringify({ 
