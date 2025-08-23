@@ -79,7 +79,7 @@ const handler = async (req: Request): Promise<Response> => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${notificationApiKey}`,
+        'Authorization': notificationApiKey,
       },
       body: JSON.stringify({
         phoneNumber: driver.phone_number,

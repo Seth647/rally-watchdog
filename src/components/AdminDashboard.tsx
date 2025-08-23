@@ -141,15 +141,6 @@ export function AdminDashboard() {
   };
 
   const sendWarning = async (report: Report) => {
-    if (!report.phone_number) {
-      toast({
-        title: "No Contact Info",
-        description: "Driver phone number not found",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       toast({
         title: "Sending Warning...",
@@ -308,17 +299,15 @@ export function AdminDashboard() {
                             </SelectContent>
                           </Select>
                           
-                          {report.phone_number && (
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => sendWarning(report)}
-                              className="w-full"
-                            >
-                              <MessageSquare className="w-4 h-4 mr-2" />
-                              Send Warning
-                            </Button>
-                          )}
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => sendWarning(report)}
+                            className="w-full"
+                          >
+                            <MessageSquare className="w-4 h-4 mr-2" />
+                            Send Warning
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
