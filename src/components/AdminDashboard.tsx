@@ -150,13 +150,27 @@ export function AdminDashboard() {
       return;
     }
 
-    // TODO: Implement SMS/WhatsApp integration
-    toast({
-      title: "Warning Sent",
-      description: `Warning sent to ${report.driver_name || 'driver'} at ${report.phone_number}`,
-    });
-    
-    updateReportStatus(report.id, "resolved");
+    try {
+      const { data, error } = await supabase.functions.invoke('send-warning-sms', {
+        body: { reportId: report.id }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Warning Sent",
+        description: `SMS warning sent to ${report.driver_name || 'driver'} at ${report.phone_number}`,
+      });
+      
+      updateReportStatus(report.id, "resolved");
+    } catch (error) {
+      console.error("Error sending warning:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send warning SMS",
+        variant: "destructive",
+      });
+    }
   };
 
   const getStatusBadge = (status: string) => {
