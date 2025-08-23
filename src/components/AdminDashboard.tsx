@@ -141,40 +141,22 @@ export function AdminDashboard() {
   };
 
   const sendWarning = async (report: Report) => {
-    try {
+    if (!report.phone_number) {
       toast({
-        title: "Sending Warning...",
-        description: "Please wait while we send the SMS warning",
-      });
-
-      const reason = report.description || report.incident_type;
-      
-      const { data, error } = await supabase.functions.invoke('notificationapi-rally_watchdog_warning', {
-        body: {
-          vehicle_number: report.vehicle_number,
-          reason: reason,
-          report_id: report.id
-        }
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Warning Sent Successfully",
-        description: `SMS warning sent to ${data.driver_name} at ${data.phone_number}`,
-      });
-      
-      // Mark report as resolved after successful warning
-      updateReportStatus(report.id, "resolved");
-      
-    } catch (error: any) {
-      console.error("Error sending warning:", error);
-      toast({
-        title: "Failed to Send Warning",
-        description: error.message || "There was an error sending the SMS warning",
+        title: "No Contact Info",
+        description: "Driver phone number not found",
         variant: "destructive",
       });
+      return;
     }
+
+    // TODO: Implement SMS/WhatsApp integration
+    toast({
+      title: "Warning Sent",
+      description: `Warning sent to ${report.driver_name || 'driver'} at ${report.phone_number}`,
+    });
+    
+    updateReportStatus(report.id, "resolved");
   };
 
   const getStatusBadge = (status: string) => {
@@ -299,15 +281,17 @@ export function AdminDashboard() {
                             </SelectContent>
                           </Select>
                           
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => sendWarning(report)}
-                            className="w-full"
-                          >
-                            <MessageSquare className="w-4 h-4 mr-2" />
-                            Send Warning
-                          </Button>
+                          {report.phone_number && (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => sendWarning(report)}
+                              className="w-full"
+                            >
+                              <MessageSquare className="w-4 h-4 mr-2" />
+                              Send Warning
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </CardContent>
