@@ -1,1 +1,4 @@
 project_id = "rdvckuqtcqgwgyeowllq"
+
+[functions.notificationapi-rally_watchdog_warning]
+verify_jwt = true
