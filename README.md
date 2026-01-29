@@ -1,6 +1,6 @@
-# Rally Watchdog
+# Montagu Road Rally Watchdog
 
-Rally Watchdog is a safety management dashboard for cross-country rally events. It enables stewards to capture incident reports, monitor driver status, and manage follow-up actions through an integrated suite of tools.
+Montagu Road Rally Watchdog is a safety management dashboard for cross-country rally events. It enables stewards to capture incident reports, monitor driver status, and manage follow-up actions through an integrated suite of tools.
 
 ## Features
 

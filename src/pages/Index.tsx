@@ -12,6 +12,8 @@ const Index = () => {
   const { isAdmin } = useAdmin();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const featureGridCols = isAdmin ? "md:grid-cols-3" : "md:grid-cols-2";
+  const quickActionCols = isAdmin ? "md:grid-cols-2" : "";
 
   const handleProtectedNav = (path: string) => {
     if (!isAdmin) {
@@ -42,7 +44,7 @@ const Index = () => {
               </div>
             </div>
             <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary-glow))] bg-clip-text text-transparent">
-              Rally Watchdog
+              Montagu Road Rally Watchdog
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               Professional incident reporting system for cross-country rally events. 
@@ -51,7 +53,7 @@ const Index = () => {
           </div>
 
           {/* Quick Actions */}
-          <div className="grid md:grid-cols-2 gap-8 mb-16">
+          <div className={`grid gap-8 mb-16 ${quickActionCols}`}>
             <Card className="border-border bg-card shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-rally)] transition-all duration-300 group">
               <CardHeader>
                 <div className="flex items-center gap-4">
@@ -82,39 +84,41 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="border-border bg-card shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-rally)] transition-all duration-300 group">
-              <CardHeader>
-                <div className="flex items-center gap-4">
-                  <div className="bg-[hsl(var(--accent)_/_0.1)] p-3 rounded-full group-hover:bg-[hsl(var(--accent)_/_0.2)] transition-colors">
-                    <Shield className="w-6 h-6 text-accent" />
+            {isAdmin && (
+              <Card className="border-border bg-card shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-rally)] transition-all duration-300 group">
+                <CardHeader>
+                  <div className="flex items-center gap-4">
+                    <div className="bg-[hsl(var(--accent)_/_0.1)] p-3 rounded-full group-hover:bg-[hsl(var(--accent)_/_0.2)] transition-colors">
+                      <Shield className="w-6 h-6 text-accent" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-2xl">Rally Control</CardTitle>
+                      <CardDescription>
+                        Admin dashboard for event organizers
+                      </CardDescription>
+                    </div>
                   </div>
-                  <div>
-                    <CardTitle className="text-2xl">Rally Control</CardTitle>
-                    <CardDescription>
-                      Admin dashboard for event organizers
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-6">
-                  Monitor incidents, manage reports, and send warnings to drivers in real-time.
-                </p>
-                <Button
-                  variant="rally"
-                  size="lg"
-                  className="w-full group"
-                  onClick={() => handleProtectedNav("/admin")}
-                >
-                  Access Dashboard
-                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </CardContent>
-            </Card>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground mb-6">
+                    Monitor incidents, manage reports, and send warnings to drivers in real-time.
+                  </p>
+                  <Button
+                    variant="rally"
+                    size="lg"
+                    className="w-full group"
+                    onClick={() => handleProtectedNav("/admin")}
+                  >
+                    Access Dashboard
+                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Feature Cards */}
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className={`grid gap-6 ${featureGridCols}`}>
             <Card className="border-border bg-card shadow-[var(--shadow-card)]">
               <CardHeader className="text-center">
                 <div className="bg-[hsl(var(--primary)_/_0.1)] p-3 rounded-full w-fit mx-auto mb-4">
@@ -129,27 +133,29 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="border-border bg-card shadow-[var(--shadow-card)]">
-              <CardHeader className="text-center">
-                <div className="bg-[hsl(var(--accent)_/_0.1)] p-3 rounded-full w-fit mx-auto mb-4">
-                  <Users className="w-6 h-6 text-accent" />
-                </div>
-                <CardTitle>Driver Registry</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-center">
-                  Comprehensive database of all rally participants and their vehicle information.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full mt-4"
-                  onClick={() => handleProtectedNav("/registry")}
-                >
-                  View Registry
-                </Button>
-              </CardContent>
-            </Card>
+            {isAdmin && (
+              <Card className="border-border bg-card shadow-[var(--shadow-card)]">
+                <CardHeader className="text-center">
+                  <div className="bg-[hsl(var(--accent)_/_0.1)] p-3 rounded-full w-fit mx-auto mb-4">
+                    <Users className="w-6 h-6 text-accent" />
+                  </div>
+                  <CardTitle>Driver Registry</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground text-center">
+                    Comprehensive database of all rally participants and their vehicle information.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full mt-4"
+                    onClick={() => handleProtectedNav("/registry")}
+                  >
+                    View Registry
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
             <Card className="border-border bg-card shadow-[var(--shadow-card)]">
               <CardHeader className="text-center">
@@ -172,7 +178,7 @@ const Index = () => {
       <footer className="border-t border-border bg-card mt-16">
         <div className="max-w-6xl mx-auto px-4 py-8">
           <div className="text-center text-muted-foreground">
-            <p>&copy; 2024 Rally Watchdog. Professional rally safety management system.</p>
+            <p>&copy; 2024 Montagu Road Rally Watchdog. Professional rally safety management system.</p>
           </div>
         </div>
       </footer>
