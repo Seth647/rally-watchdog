@@ -1,17 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import notificationapi from 'npm:notificationapi-node-server-sdk';
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-// Initialize NotificationAPI
-notificationapi.init(
-  Deno.env.get('NOTIFICATIONAPI_CLIENT_ID') || '',
-  Deno.env.get('NOTIFICATIONAPI_CLIENT_SECRET') || ''
-);
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -20,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { reportId } = await req.json();
+    const { reportId, driverId } = await req.json();
 
     // Initialize Supabase client
     const supabase = createClient(
@@ -28,16 +20,10 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Fetch report with driver information
+    // Fetch report details
     const { data: report, error } = await supabase
       .from('reports')
-      .select(`
-        *,
-        drivers (
-          driver_name,
-          phone_number
-        )
-      `)
+      .select('*')
       .eq('id', reportId)
       .single();
 
@@ -46,50 +32,115 @@ serve(async (req) => {
       throw new Error('Failed to fetch report');
     }
 
-    if (!report.drivers?.phone_number) {
+    const targetDriverId = driverId || report.driver_id;
+
+    if (!targetDriverId) {
+      throw new Error('Driver not assigned to report');
+    }
+
+    const { data: driverRecord, error: driverError } = await supabase
+      .from('drivers')
+      .select('*')
+      .eq('id', targetDriverId)
+      .single();
+
+    if (driverError) {
+      console.error('Error fetching driver:', driverError);
+      throw new Error('Failed to fetch driver');
+    }
+
+    if (!driverRecord?.phone_number) {
       throw new Error('Driver phone number not found');
     }
 
     // Create warning message
     const warningMessage = `Rally Warning: You have been reported for ${report.incident_type}. Please drive safely and follow rally regulations. Report #${report.report_number}`;
 
-    // Send SMS via NotificationAPI
-    await notificationapi.send({
-      type: 'rally_watchdog_warning',
-      to: {
-        id: report.drivers.driver_name || 'driver',
-        number: report.drivers.phone_number
-      },
-      parameters: {
-        comment: warningMessage,
-        incident_type: report.incident_type,
-        report_number: report.report_number,
-        vehicle_number: report.vehicle_number
+    const notificationClientId = Deno.env.get('NOTIFICATIONAPI_CLIENT_ID');
+    const notificationClientSecret = Deno.env.get('NOTIFICATIONAPI_CLIENT_SECRET');
+    let deliveryStatus: 'sent' | 'skipped' | 'failed' = 'sent';
+    let notificationError: string | undefined;
+
+    if (!notificationClientId || !notificationClientSecret) {
+      deliveryStatus = 'skipped';
+      notificationError = 'NotificationAPI credentials are not configured';
+    } else {
+      try {
+        // Send SMS via NotificationAPI REST API
+        const notificationPayload = {
+          type: 'rally_watchdog_warning',
+          to: {
+            id: driverRecord.driver_name || 'driver',
+            number: driverRecord.phone_number
+          },
+          parameters: {
+            comment: warningMessage,
+            incident_type: report.incident_type,
+            report_number: report.report_number,
+            vehicle_number: report.vehicle_number
+          }
+        };
+
+        const notificationResponse = await fetch(
+          `${Deno.env.get('NOTIFICATIONAPI_BASE_URL') || 'https://api.notificationapi.com'}/${notificationClientId}/sender`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Basic ${btoa(`${notificationClientId}:${notificationClientSecret}`)}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(notificationPayload),
+          }
+        );
+
+        if (!notificationResponse.ok) {
+          const errorText = await notificationResponse.text();
+          console.error('NotificationAPI error response:', errorText);
+          deliveryStatus = 'failed';
+          notificationError = `NotificationAPI request failed with status ${notificationResponse.status}`;
+        }
+      } catch (notificationErr) {
+        console.error('NotificationAPI error:', notificationErr);
+        deliveryStatus = 'failed';
+        notificationError = notificationErr instanceof Error ? notificationErr.message : 'Unknown notification error';
       }
-    });
+    }
 
     // Record the warning in the database
     const { error: warningError } = await supabase
       .from('warnings')
       .insert({
         report_id: reportId,
-        driver_id: report.driver_id,
+        driver_id: targetDriverId,
         warning_type: 'sms',
         message: warningMessage,
-        delivery_status: 'sent'
+        delivery_status: deliveryStatus
       });
 
     if (warningError) {
       console.error('Error recording warning:', warningError);
     }
 
-    console.log(`SMS warning sent to ${report.drivers.phone_number} for incident: ${report.incident_type}`);
+    const responseBody = {
+      success: deliveryStatus === 'sent',
+      delivery_status: deliveryStatus,
+      message:
+        deliveryStatus === 'sent'
+          ? 'Warning SMS sent successfully'
+          : notificationError ??
+            (deliveryStatus === 'skipped'
+              ? 'SMS skipped'
+              : 'Failed to send SMS'),
+    };
+
+    if (notificationError) {
+      responseBody['reason'] = notificationError;
+    }
 
     return new Response(JSON.stringify({
-      success: true,
-      message: 'Warning SMS sent successfully'
+      ...responseBody
     }), {
-      status: 200,
+      status: deliveryStatus === 'sent' ? 200 : 202,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 

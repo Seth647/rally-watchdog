@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -10,16 +10,39 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.4"
+    PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
+      admins: {
+        Row: {
+          created_at: string
+          id: string
+          password: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          password: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          password?: string
+          username?: string
+        }
+        Relationships: []
+      }
       drivers: {
         Row: {
           created_at: string
           driver_name: string
           emergency_contact: string | null
+          email: string | null
           id: string
+          license_plate_number: string | null
           phone_number: string
           updated_at: string
           vehicle_make: string | null
@@ -30,7 +53,9 @@ export type Database = {
           created_at?: string
           driver_name: string
           emergency_contact?: string | null
+          email?: string | null
           id?: string
+          license_plate_number?: string | null
           phone_number: string
           updated_at?: string
           vehicle_make?: string | null
@@ -41,7 +66,9 @@ export type Database = {
           created_at?: string
           driver_name?: string
           emergency_contact?: string | null
+          email?: string | null
           id?: string
+          license_plate_number?: string | null
           phone_number?: string
           updated_at?: string
           vehicle_make?: string | null
@@ -54,28 +81,29 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          username: string | null
-          rally_number: string | null
           phone: string | null
+          rally_number: string | null
+          username: string | null
         }
         Insert: {
           created_at?: string
           id: string
-          username?: string | null
-          rally_number?: string | null
           phone?: string | null
+          rally_number?: string | null
+          username?: string | null
         }
         Update: {
           created_at?: string
           id?: string
-          username?: string | null
-          rally_number?: string | null
           phone?: string | null
+          rally_number?: string | null
+          username?: string | null
         }
         Relationships: []
       }
       reports: {
         Row: {
+          client_fingerprint: string
           created_at: string
           description: string
           driver_id: string | null
@@ -84,15 +112,16 @@ export type Database = {
           incident_type: string
           location: string | null
           media_url: string | null
-          report_number?: string
+          report_number: string
           reporter_contact: string | null
           reporter_name: string | null
           status: string
           updated_at: string
-          vehicle_number: string
           user_id: string | null
+          vehicle_number: string
         }
         Insert: {
+          client_fingerprint: string
           created_at?: string
           description: string
           driver_id?: string | null
@@ -106,10 +135,11 @@ export type Database = {
           reporter_name?: string | null
           status?: string
           updated_at?: string
-          vehicle_number: string
           user_id?: string | null
+          vehicle_number: string
         }
         Update: {
+          client_fingerprint?: string
           created_at?: string
           description?: string
           driver_id?: string | null
@@ -123,8 +153,8 @@ export type Database = {
           reporter_name?: string | null
           status?: string
           updated_at?: string
-          vehicle_number?: string
           user_id?: string | null
+          vehicle_number?: string
         }
         Relationships: [
           {
@@ -132,13 +162,6 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reports_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -193,10 +216,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_report_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_report_number: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never

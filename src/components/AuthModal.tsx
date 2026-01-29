@@ -8,9 +8,10 @@ import { useToast } from "@/hooks/use-toast";
 
 interface AuthModalProps {
   open: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function AuthModal({ open }: AuthModalProps) {
+export function AuthModal({ open, onOpenChange }: AuthModalProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,6 +26,11 @@ export function AuthModal({ open }: AuthModalProps) {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       toast({ title: "Sign in failed", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Signed in", description: "You can now submit incident reports." });
+      onOpenChange?.(false);
+      setEmail("");
+      setPassword("");
     }
     setLoading(false);
   };
@@ -52,12 +58,17 @@ export function AuthModal({ open }: AuthModalProps) {
         }
       }
       toast({ title: "Check your email", description: "Confirm your account via the email sent." });
+      onOpenChange?.(false);
+      setEmail("");
+      setPassword("");
+      setPhone("");
+      setRallyNumber("");
     }
     setLoading(false);
   };
 
   return (
-    <Dialog open={open}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md [&>button]:hidden">
         <DialogHeader>
           <DialogTitle>{isSignUp ? "Sign Up" : "Sign In"}</DialogTitle>

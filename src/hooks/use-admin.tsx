@@ -19,7 +19,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (username: string, password: string) => {
     const { data, error } = await supabase
-      .from("admins" as any)
+      .from("admins")
       .select("*")
       .eq("username", username)
       .eq("password", password)
